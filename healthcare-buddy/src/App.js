@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import logo from "./NHS-Logo.svg";
 import "./App.css";
+import { filterDataToShowAvailableJobs } from "./utils";
 
 const STAFF_DATA_API_URL =
   "https://vvgv5rubu3.execute-api.eu-west-2.amazonaws.com/dev/sessions";
@@ -13,21 +14,6 @@ const locum = {
   staffType: "gp",
   staffTypeId: "1",
 };
-
-const filterDataToShowAvailableJobs = (sessionArr) =>
-  sessionArr.filter((session) => {
-    const sessionStartDate = new Date(session.startDatetime);
-    const sessionEndDate = new Date(session.endDatetime);
-
-    return (
-      session.staffType === "gp" && // Show only GP jobs TODO: Make this user-selectable?
-      session.status === "POSTED" && // Show only jobs that have been posted TODO: Use enum?
-      session.locum === null && // Show jobs without a locum
-      sessionStartDate.toString() !== "Invalid Date" && // Check that date exists and has been parsed correctly // TODO: Use date-fns ?
-      sessionEndDate.toString() !== "Invalid Date" && // Same as above. This removes "the pink clinic" from results user sees
-      Date.now() < sessionStartDate // Show jobs that start in the future
-    );
-  });
 
 const ShiftDataRow = ({ data }) => {
   const {

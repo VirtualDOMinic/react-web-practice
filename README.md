@@ -16,12 +16,13 @@ See how my React web skills are with a ~2 hour challenge!
 - [x] Add instructions for running (and testing) to this readme
 - [x] Ensure a11y fundamentals are present (where applicable: contrast, semantic html, labels, tabbing, alt text)
   - **Note**: I have used semantic HTML, and contrast is definitely accessible, so the basics are done. If I decide to move away from a table (e.g. to an `ol` with styled `divs` to display the content instead) for the data, more a11y considerations will be required
-- [ ] Add unit tests (Jest)
+  - Page passes the Lighthouse "Accessibility" and "Best Practices" checks with 100%. This cannot account for everything, though.
+- [x] Add unit test(s) (Jest)
 - [ ] Add component/integration tests (react testing library?)
 - [x] Add basic error handling
 - [x] Add basic loading state handling
 
-## Nice to have
+## Nice to have (future plans)
 
 - [ ] More organised repo (files/directories) and code structure
 - [ ] Confirm functionality and a11y on FF and Safari
