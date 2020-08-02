@@ -48,6 +48,7 @@ function App() {
   const [isError, setIsError] = useState(false);
 
   useEffect(() => {
+    // TODO: Make an `isMounted` check before any state setting to avoid "Can't perform a React state update on an unmounted component" warnings in test suite
     fetch(STAFF_DATA_API_URL)
       .then((res) => {
         if (!res.ok) {
