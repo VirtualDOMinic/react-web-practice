@@ -1,24 +1,136 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import logo from "./NHS-Logo.svg";
+import "./App.css";
+
+const STAFF_DATA_API_URL =
+  "https://vvgv5rubu3.execute-api.eu-west-2.amazonaws.com/dev/sessions";
+
+const locum = {
+  // TODO: Use this to initialise state, then allow user to update?
+  id: "1234",
+  firstName: "John",
+  lastName: "Doe",
+  staffType: "gp",
+  staffTypeId: "1",
+};
+
+const filterDataToShowAvailableJobs = (sessionArr) =>
+  sessionArr.filter((session) => {
+    const sessionStartDate = new Date(session.startDatetime);
+    const sessionEndDate = new Date(session.endDatetime);
+
+    return (
+      session.staffType === "gp" && // Show only GP jobs TODO: Make this user-selectable?
+      session.status === "POSTED" && // Show only jobs that have been posted TODO: Use enum?
+      session.locum === null && // Show jobs without a locum
+      sessionStartDate.toString() !== "Invalid Date" && // Check that date exists and has been parsed correctly // TODO: Use date-fns ?
+      sessionEndDate.toString() !== "Invalid Date" && // Same as above. This removes "the pink clinic" from results user sees
+      Date.now() < sessionStartDate // Show jobs that start in the future
+    );
+  });
+
+const ShiftDataRow = ({ data }) => {
+  const {
+    practice,
+    startDatetime,
+    endDatetime,
+    hourlyRate,
+    applicationIds,
+  } = data;
+
+  // Probably not the most robust way to show dates and times, but works well for time constraint
+  // TODO: Probably makes sense to show timezone of times being displayed
+  const shiftDate = new Date(startDatetime).toString().slice(0, 15);
+  const startTime = new Date(startDatetime).toTimeString().slice(0, 5);
+  const endTime = new Date(endDatetime).toTimeString().slice(0, 5);
+
+  return (
+    <tr>
+      <td>{practice.name}</td>
+      <td>{shiftDate}</td>
+      <td>{startTime}</td>
+      <td>{endTime}</td>
+      <td>£{hourlyRate}</td>
+      <td>{applicationIds.length}</td>
+    </tr>
+  );
+};
 
 function App() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [data, setData] = useState([]);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    fetch(STAFF_DATA_API_URL)
+      .then((res) => {
+        if (!res.ok) {
+          setIsError(true);
+        }
+        return res.json();
+      })
+      .then((json) => {
+        setIsLoading(false);
+        setData(filterDataToShowAvailableJobs(json.data));
+      })
+      .catch(() => {
+        setIsError(true);
+      });
+  }, []);
+
+  if (isError) {
+    // TODO: Better-integrated error handling and error state UI
+    // TODO: Button to re-fetch (e.g. re-trigger the `useEffect`)
+    return (
+      <main>
+        <h1>Error loading data</h1>
+        <p>
+          Unfortunately, an error occurred when loading your data. Please
+          refresh the page to try again
+        </p>
+      </main>
+    );
+  }
+
   return (
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
+        <h1>Healthcare Buddy</h1>
         <p>
-          Edit <code>src/App.js</code> and save to reload.
+          Finding the best {locum.staffType} jobs for {locum.firstName}{" "}
+          {locum.lastName}{" "}
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
       </header>
+      {isLoading ? (
+        "Loading..."
+      ) : (
+        <main className="results-container">
+          {/* TODO: Entire table _could_ be its own component, rather than just using the `<ShiftDataRow />` */}
+          <div className="responsive-table">
+            <table>
+              <caption>
+                <h2>List of available shifts</h2>
+              </caption>
+              <thead>
+                <tr>
+                  <th>Practice Name</th>
+                  <th>Shift Date</th>
+                  <th>Start Time</th>
+                  <th>End Time</th>
+                  <th>Hourly Rate (GBP)</th>
+                  <th>Number of Applicants</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((x) => (
+                  <ShiftDataRow key={x.id} data={x} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </main>
+      )}
     </div>
   );
 }
